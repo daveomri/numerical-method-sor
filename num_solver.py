@@ -103,6 +103,10 @@ def get_b_vector(y):
     
     return b_vector
 
+def get_x0_vector():
+    return np.zeros((20,1), dtype=float)
+
+
 def is_criteria_satisfied(a_matrix, b_vector, x_vector):
     return (
         np.linalg.norm(
@@ -118,6 +122,6 @@ def sor_method():
     """todo"""
 
 
-x = np.zeros((20,1))
+# x = np.zeros((20,1))
 
-print(is_criteria_satisfied(get_a_matrix(5), get_b_vector(5), x))
+# print(is_criteria_satisfied(get_a_matrix(5), get_b_vector(5), x))
