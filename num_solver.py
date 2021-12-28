@@ -82,7 +82,33 @@ def get_d_matrix(a_matrix):
 
 # Priprava dat pro ulohu ----------------------------------------------------------
 
+def get_a_matrix(y):
+    a_matrix = np.zeros((20, 20), dtype=float)
 
+    a_matrix[0, 0] = y
+    for i in range(1, a_matrix.shape[0]):
+        a_matrix[i, i] = y
+        a_matrix[i, i-1] = -1.
+        a_matrix[i-1, i] = -1.
+
+    return a_matrix
+
+def get_b_vector(y):
+    b_vector = np.zeros((20, 1), dtype=float)
+
+    b_vector[0, 0] = y-1
+    b_vector[19, 0] = y-1
+    for i in range(1, b_vector.shape[0]-1):
+        b_vector[i, 0] = y-2
+    
+    return b_vector
+
+def is_criteria_satisfied(a_matrix, b_vector, x_vector):
+    return (
+        np.linalg.norm(
+            mult_matrices(a_matrix, x_vector) - b_vector)/
+        np.linalg.norm(b_vector)) < 10**-6
+    
 
 # Iteracni metody -----------------------------------------------------------------
 def jacobi_method():
@@ -90,3 +116,8 @@ def jacobi_method():
 
 def sor_method():
     """todo"""
+
+
+x = np.zeros((20,1))
+
+print(is_criteria_satisfied(get_a_matrix(5), get_b_vector(5), x))
