@@ -113,6 +113,51 @@ def is_criteria_satisfied(a_matrix, b_vector, x_vector):
             mult_matrices(a_matrix, x_vector) - b_vector)/
         np.linalg.norm(b_vector)) < 10**-6
     
+"""
+    Funkce testuej zdali je matice diagonalne dominantni
+    tuto funkci vyuziva Jacobiho a GS metodou k urceni zda-li 
+    bude k reseni konvergovat ci o tom nelze rozhodnout
+"""
+def is_diagonal_dominant(matrix):
+    # Otestovani spravnych rozmeru
+    if (matrix.shape[0] != matrix.shape[1]):
+        return False
+    # Otestovani diagonalni dominance sloupcu a radku
+    row_dom = True
+    col_dom = True
+    for i in range(0, matrix.shape[0]):
+        row_sum = 0
+        col_sum = 0
+        for j in range(0, matrix.shape[1]):
+            if i != j:
+                row_sum += abs(matrix[i, j])
+                col_sum += abs(matrix[j, i])
+        
+        if abs(matrix[i, i]) < row_sum:
+            row_dom = False
+        if abs(matrix[i, i]) < col_sum:
+            col_dom = False
+        if(row_dom == False and col_dom == False):
+            return False
+    return True
+
+"""
+    Funkce testuje zdali je matice pozitivne definitni
+    a to pomoci jejich vlastnich cisel, neb kazda matice
+    symetricka, jejiz vlastni cisla jsou kladna je pozitivne
+    definitni
+
+    Funkce je vyuzita pro GS metodu, kde by jeji splneni znamenalo
+    ze metoda konverguje k reseni soustavy, v opacnem pripade by
+    se o konvergenci nedalo rozhodnout
+"""
+def is_positive_definite(matrix):
+    # Otestovani symetricnosti matice
+    if not np.all( matrix - matrix.transpose() == 0):
+        return False
+
+    # Otestovani pozitivni difinitnosti
+    return np.all(np.linalg.eigvals(matrix) > 0)
 
 # Iteracni metody -----------------------------------------------------------------
 def jacobi_method():
@@ -125,3 +170,4 @@ def sor_method():
 # x = np.zeros((20,1))
 
 # print(is_criteria_satisfied(get_a_matrix(5), get_b_vector(5), x))
+print(is_positive_definite(get_a_matrix(0.5)))
