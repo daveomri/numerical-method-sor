@@ -1,5 +1,6 @@
 # David Omrai 23.12.2021
 import numpy as np
+from numpy.linalg import eig
 
 # Maticove operace ----------------------------------------------------------------
 """
@@ -46,7 +47,6 @@ def inverse_matrix(matrix):
     return np.linalg.inv(matrix)
 
 # Rozhlad matice A ----------------------------------------------------------------
-
 """
     Metoda vraci L matici, kde se nachazi
     prvky pod diagonalou, ostatni jsou nuly
@@ -82,6 +82,14 @@ def get_d_matrix(a_matrix):
 
 # Priprava dat pro ulohu ----------------------------------------------------------
 
+def get_e_matrix():
+    e_matrix = np.zeros((20,20), dtype=float)
+
+    for i in range(0, e_matrix.shape[0]):
+        e_matrix[i, i] = 1.
+
+    return e_matrix
+
 def get_a_matrix(y):
     a_matrix = np.zeros((20, 20), dtype=float)
 
@@ -106,13 +114,29 @@ def get_b_vector(y):
 def get_x0_vector():
     return np.zeros((20,1), dtype=float)
 
+def get_l2_norm(x_vector):
+    elem_sum = 0
+    for i in range(0, x_vector.shape[0]):
+        elem_sum += abs(x_vector[i, 0]**2)
+    return elem_sum**0.5
 
 def is_criteria_satisfied(a_matrix, b_vector, x_vector):
     return (
-        np.linalg.norm(
+        get_l2_norm(
             mult_matrices(a_matrix, x_vector) - b_vector)/
-        np.linalg.norm(b_vector)) < 10**-6
-    
+        get_l2_norm(b_vector)) < 10**-6
+    # return (
+    #     np.linalg.norm(
+    #         mult_matrices(a_matrix, x_vector) - b_vector)/
+    #     np.linalg.norm(b_vector)) < 10**-6
+
+def get_spectral_radius(matrix):
+    max_eigval = 0
+    for eigval in np.linalg.eigvals(matrix):
+        if max_eigval < abs(eigval):
+            max_eigval = eigval
+    return max_eigval
+
 """
     Funkce testuej zdali je matice diagonalne dominantni
     tuto funkci vyuziva Jacobiho a GS metodou k urceni zda-li 
@@ -176,11 +200,15 @@ def get_next_approx(q_matrix, a_matrix, x_vector, b_vector):
     return mult_matrices(inverse_matrix(q_matrix), (mult_matrices(q_matrix-a_matrix, x_vector) + b_vector))
 
 # Iteracni metody -----------------------------------------------------------------
-def jacobi_method(y, max_iter=100000):
+def jacobi_method(y, max_iter=10000):
     print("Spousteni Jacobiho metody se vstupnim parametrem {}".format(y))
     # Vytvoreni matice Q
     a_matrix = get_a_matrix(y)
     q_matrix = get_d_matrix(a_matrix)
+
+    e_matrix = get_e_matrix()
+    w_matrix = e_matrix - mult_matrices(inverse_matrix(q_matrix), a_matrix)
+    wk_matrix = w_matrix
     # Vytvoreni vektoru b
     b_vector = get_b_vector(y)
 
@@ -200,7 +228,12 @@ def jacobi_method(y, max_iter=100000):
         if (is_criteria_satisfied(a_matrix, b_vector, x_cur)):
             print("Podminka aproximace splnena v {} iterace".format(i))
             return True
-        
+        # Overeni konvergence aproximaci
+        if i != 0 and get_spectral_radius(wk_matrix) > 1:
+            break
+        if i != 0:
+            wk_matrix = mult_matrices(wk_matrix, w_matrix)
+
         # Vypocitej dalsi aproximaci
         x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
     
@@ -208,13 +241,17 @@ def jacobi_method(y, max_iter=100000):
     return False
             
 
-def sor_method(y, max_iter=100000):
+def sor_method(y, max_iter=10000):
     print("Spousteni SOR metody se vstupnim parametrem {}".format(y))
     # Vytvoreni matice Q
     a_matrix = get_a_matrix(y)
     d_matrix = get_d_matrix(a_matrix)
     l_matrix = get_l_matrix(a_matrix)
     q_matrix = d_matrix + l_matrix
+
+    e_matrix = get_e_matrix()
+    w_matrix = e_matrix - mult_matrices(inverse_matrix(q_matrix), a_matrix)
+    wk_matrix = w_matrix
     # Vytvoreni vektoru b
     b_vector = get_b_vector(y)
 
@@ -241,11 +278,26 @@ def sor_method(y, max_iter=100000):
             print("Podminka aproximace splnena v {} iterace".format(i))
             return True
         
+        # Overeni konvergence aproximaci
+        if i != 0 and get_spectral_radius(wk_matrix) >= 1:
+            break
+        if i != 0:
+            wk_matrix = mult_matrices(wk_matrix, w_matrix)
+
         # Vypocitej dalsi aproximaci
         x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
     
     print("Metoda diverguje, nepodarilo se uspokojit zadanou podminku aproximace")
     return False
             
-    
 
+# Spusteni iteracnich metod nad mnozinou promennych y
+# y_vals = [5, 2, 0.5]
+
+# for y in y_vals:
+#     jacobi_method(y)
+#     print("---------------------------------------")
+#     sor_method(y)
+#     print("---------------------------------------")
+
+jacobi_method(0.5)
