@@ -159,15 +159,93 @@ def is_positive_definite(matrix):
     # Otestovani pozitivni difinitnosti
     return np.all(np.linalg.eigvals(matrix) > 0)
 
+"""
+    Funkce reprezentuje jeden iteracni krok, na vstupu
+    bere matici Q, ktera se lisi dle pouzite metody a
+    dale provadi operace s maticemi a vektory dle vzorecku
+    probiraneho na prednasce
+
+    Postupne se provede inverze matice Q, odecet matic Q a A,
+    vynasobeni tohoto rozdilu vektorem xk, prictenim vektoru b
+    a nasledne vynasoveni inverze matice Q s vysledkem v zavorce
+
+    Pouzita rovnice je v tomto tvaru
+    xk+1 = Q^-1((Q - A)xk + b)
+"""
+def get_next_approx(q_matrix, a_matrix, x_vector, b_vector):
+    return mult_matrices(inverse_matrix(q_matrix), (mult_matrices(q_matrix-a_matrix, x_vector) + b_vector))
+
 # Iteracni metody -----------------------------------------------------------------
-def jacobi_method():
-    """todo"""
+def jacobi_method(y, max_iter=100000):
+    print("Spousteni Jacobiho metody se vstupnim parametrem {}".format(y))
+    # Vytvoreni matice Q
+    a_matrix = get_a_matrix(y)
+    q_matrix = get_d_matrix(a_matrix)
+    # Vytvoreni vektoru b
+    b_vector = get_b_vector(y)
 
-def sor_method():
-    """todo"""
+    # Overeni konvergence metody
+    print("Overeni konvergence metody")
+    if is_diagonal_dominant(q_matrix) == True:
+        print("Matice Q je radkove/sloupcove diagonalne dominantni")
+        print("Jacobiho metoda bude tedy konvergovat pro libovolnou poc. aproximaci x0")
+    else:
+        print("Matice Q neni radkove ani sloupcove diagonalne dominantni")
+        print("Jacobiho metoda muze, ale take nemusi konvergovat")
 
+    x_cur = get_x0_vector()
+    # Aproximace reseni soustavy rovnic Ax = b
+    for i in range (0, max_iter):
+        print("Iterace: {}".format(i))
+        if (is_criteria_satisfied(a_matrix, b_vector, x_cur)):
+            print("Podminka aproximace splnena v {} iterace".format(i))
+            return True
+        
+        # Vypocitej dalsi aproximaci
+        x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
+    
+    print("Metoda diverguje, nepodarilo se uspokojit zadanou podminku aproximace")
+    return False
+            
 
-# x = np.zeros((20,1))
+def sor_method(y, max_iter=100000):
+    print("Spousteni SOR metody se vstupnim parametrem {}".format(y))
+    # Vytvoreni matice Q
+    a_matrix = get_a_matrix(y)
+    d_matrix = get_d_matrix(a_matrix)
+    l_matrix = get_l_matrix(a_matrix)
+    q_matrix = d_matrix + l_matrix
+    # Vytvoreni vektoru b
+    b_vector = get_b_vector(y)
 
-# print(is_criteria_satisfied(get_a_matrix(5), get_b_vector(5), x))
-print(is_positive_definite(get_a_matrix(0.5)))
+    # Overeni konvergence metody
+    print("Overeni konvergence metody")
+    if is_diagonal_dominant(q_matrix) == True:
+        print("Matice Q je radkove/sloupcove diagonalne dominantni")
+        print("SOR metoda bude tedy konvergovat pro libovolnou poc. aproximaci x0")
+    else:
+        print("Matice Q neni radkove ani sloupcove diagonalne dominantni")
+        print("SOR metoda muze, ale take nemusi konvergovat")
+    if is_positive_definite(q_matrix) == True:
+        print("Matice Q je symetricka a pozitivne definitni")
+        print("SOR metoda bude tedy konvergovat pro libovolnou poc. aproximaci x0")
+    else:
+        print("Matice Q neni symetricka a zaroven pozitivne definitni")
+        print("SOR metoda muze, ale take nemusi konvergovat")
+
+    x_cur = get_x0_vector()
+    # Aproximace reseni soustavy rovnic Ax = b
+    for i in range (0, max_iter):
+        print("Iterace: {}".format(i))
+        if (is_criteria_satisfied(a_matrix, b_vector, x_cur)):
+            print("Podminka aproximace splnena v {} iterace".format(i))
+            return True
+        
+        # Vypocitej dalsi aproximaci
+        x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
+    
+    print("Metoda diverguje, nepodarilo se uspokojit zadanou podminku aproximace")
+    return False
+            
+    
+
