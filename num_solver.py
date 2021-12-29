@@ -238,13 +238,14 @@ def get_next_approx(q_matrix, a_matrix, x_vector, b_vector):
     Nejprve se zjisti, zdali pro matici Q je zajistena konvergence
 
     Dale probiha vlastni beh programu, postupne iterovani a ziskavani novych
-    aproximaci reseni z pusodnich
+    aproximaci reseni z puvodnich
 
     Pokud se behem behu stane, ze spektralni prumer matice W (chyby) prekroci
-    hranici 1, pak se metoda ukonci neb chyba aproximaci nekonverguje k nule
+    hranici 1, pak se metoda ukonci, neb chyba aproximaci nekonverguje k nule
     a tedy reseni soustavy rovnic diverguje
 
-    Pokud se vycerpa maximalni pocet iteraci, tak je uzivatel informovat, ze metoda nejspise diverguje
+    Pokud se vycerpa maximalni pocet iteraci, tak je uzivatel informovan, ze 
+    metoda nejspise diverguje
 """
 def jacobi_method(y, max_iter=10000):
     print("Spousteni Jacobiho metody se vstupnim parametrem {}".format(y))
@@ -277,21 +278,41 @@ def jacobi_method(y, max_iter=10000):
         
         # Overeni konvergence aproximaci - chyba musi konvergovat k nule
         # ek = Wk*e0
-        if i != 0 and get_spectral_radius(wk_matrix) > 1:
-            break
+        if i != 0 and get_spectral_radius(wk_matrix) >= 1:
+            print("Metoda diverguje")
+            return False
         if i != 0:
             wk_matrix = mult_matrices(wk_matrix, w_matrix)
 
         # Vypocitej dalsi aproximaci
         x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
     
-    print("Metoda diverguje, nepodarilo se uspokojit zadanou podminku aproximace")
+    print("Metoda nedokazala uspokojit zadanou podminku konvergence")
     return False
             
+"""
+    Funkce reprezentuje Gauss-Seidlovo metodu jejiz implementace
+    je dle prednasky
 
+    Tato funkce je pojmenovana SOR i kdyz neumoznuje zmenu hodnoty omega
+
+    Metoda taktez nejdrive testuje, zdali pro danny vstup bude konvergovat
+    nebo jestli se o tom neda rozhodnout
+
+    Pro veskere operace se nejdrive definuji a vytvori matice a vektory v
+    ni vyuzivane, aby se predeslo opetovnemu vytvareni techto objektu
+
+    Po prozkoumani vstupnich matic se spusti iterace s omezenym poctem kroku
+    pokud behem ni nastane situace, kdy spektralni polomer matice Wk presahne
+    hranici 1, pak se iterace ukonci s hlaskou, ze metoda pro dany vstup diverguje
+
+    Pri dosahnuti maxima kroku iterace bez splneni podminky konvergence se uzivetel
+    informuje o situaci
+"""
 def sor_method(y, max_iter=10000):
     print("Spousteni SOR metody se vstupnim parametrem {}".format(y))
-    # Vytvoreni matice Q
+
+    # Vytvoreni matic
     a_matrix = get_a_matrix(y)
     d_matrix = get_d_matrix(a_matrix)
     l_matrix = get_l_matrix(a_matrix)
@@ -300,6 +321,7 @@ def sor_method(y, max_iter=10000):
     e_matrix = get_e_matrix()
     w_matrix = e_matrix - mult_matrices(inverse_matrix(q_matrix), a_matrix)
     wk_matrix = w_matrix
+
     # Vytvoreni vektoru b
     b_vector = get_b_vector(y)
 
@@ -318,8 +340,8 @@ def sor_method(y, max_iter=10000):
         print("Matice Q neni symetricka a zaroven pozitivne definitni")
         print("SOR metoda muze, ale take nemusi konvergovat")
 
-    x_cur = get_x0_vector()
     # Aproximace reseni soustavy rovnic Ax = b
+    x_cur = get_x0_vector()
     for i in range (0, max_iter):
         print("Iterace: {}".format(i))
         if (is_criteria_satisfied(a_matrix, b_vector, x_cur)):
@@ -329,24 +351,23 @@ def sor_method(y, max_iter=10000):
         # Overeni konvergence aproximaci - chyba musi konvergovat k nule
         # ek = Wk*e0
         if i != 0 and get_spectral_radius(wk_matrix) >= 1:
-            break
+            print("Metoda diverguje")
+            return False
         if i != 0:
             wk_matrix = mult_matrices(wk_matrix, w_matrix)
 
         # Vypocitej dalsi aproximaci
         x_cur = get_next_approx(q_matrix, a_matrix, x_cur, b_vector)
     
-    print("Metoda diverguje, nepodarilo se uspokojit zadanou podminku aproximace")
+    print("Metoda nedokazala uspokojit zadanou podminku konvergence")
     return False
             
 
 # Spusteni iteracnich metod nad mnozinou promennych y
-# y_vals = [5, 2, 0.5]
+y_vals = [5, 2, 0.5]
 
-# for y in y_vals:
-#     jacobi_method(y)
-#     print("---------------------------------------")
-#     sor_method(y)
-#     print("---------------------------------------")
-
-jacobi_method(0.5)
+for y in y_vals:
+    jacobi_method(y)
+    print("---------------------------------------")
+    sor_method(y)
+    print("---------------------------------------")
