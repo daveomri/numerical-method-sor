@@ -1,6 +1,5 @@
 # David Omrai 23.12.2021
 import numpy as np
-from numpy.linalg import eig
 
 # Maticove operace ----------------------------------------------------------------
 """
@@ -82,6 +81,10 @@ def get_d_matrix(a_matrix):
 
 # Priprava dat pro ulohu ----------------------------------------------------------
 
+"""
+    Funkce vraci jednotkovou matici fixni velikosti pro
+    potreby ulohy
+"""
 def get_e_matrix():
     e_matrix = np.zeros((20,20), dtype=float)
 
@@ -90,6 +93,10 @@ def get_e_matrix():
 
     return e_matrix
 
+"""
+    Funkce vraci A matici s pozadovanymi prvky na diagonale
+    a okolo ni dle zadani
+"""
 def get_a_matrix(y):
     a_matrix = np.zeros((20, 20), dtype=float)
 
@@ -101,6 +108,9 @@ def get_a_matrix(y):
 
     return a_matrix
 
+"""
+    Funkce vraci vektor b s prvky dle zadani
+"""
 def get_b_vector(y):
     b_vector = np.zeros((20, 1), dtype=float)
 
@@ -111,25 +121,44 @@ def get_b_vector(y):
     
     return b_vector
 
+"""
+    Funkce vraci pocatecni vektor x0
+"""
 def get_x0_vector():
     return np.zeros((20,1), dtype=float)
 
+"""
+    Funkce predstavuje vlastni implementaci L2 normy
+
+    (SUM[i=0, n](xi^2))^0.5
+"""
 def get_l2_norm(x_vector):
     elem_sum = 0
     for i in range(0, x_vector.shape[0]):
         elem_sum += abs(x_vector[i, 0]**2)
     return elem_sum**0.5
 
+"""
+    Funkce testuje zdali je splneno kriterium ze zadani
+
+    V zakomentovane casti se nachazi l2 norma implementovana
+    knihovnou nupy
+"""
 def is_criteria_satisfied(a_matrix, b_vector, x_vector):
     return (
         get_l2_norm(
             mult_matrices(a_matrix, x_vector) - b_vector)/
         get_l2_norm(b_vector)) < 10**-6
-    # return (
+    #-return (
     #     np.linalg.norm(
     #         mult_matrices(a_matrix, x_vector) - b_vector)/
     #     np.linalg.norm(b_vector)) < 10**-6
 
+"""
+    Funkce vraci spektralni polomer vstupni matice
+    neboli jeji nejvetsi vlastni cislo v absolutni
+    hodnote
+"""
 def get_spectral_radius(matrix):
     max_eigval = 0
     for eigval in np.linalg.eigvals(matrix):
@@ -138,7 +167,7 @@ def get_spectral_radius(matrix):
     return max_eigval
 
 """
-    Funkce testuej zdali je matice diagonalne dominantni
+    Funkce testuje zdali je matice diagonalne dominantni
     tuto funkci vyuziva Jacobiho a GS metodou k urceni zda-li 
     bude k reseni konvergovat ci o tom nelze rozhodnout
 """
@@ -200,6 +229,23 @@ def get_next_approx(q_matrix, a_matrix, x_vector, b_vector):
     return mult_matrices(inverse_matrix(q_matrix), (mult_matrices(q_matrix-a_matrix, x_vector) + b_vector))
 
 # Iteracni metody -----------------------------------------------------------------
+"""
+    Funkce predstavuje Jacobiho iteracni metodu implementovanou
+    dle prednasky
+
+    V ramci funkce jsou i informacni vypisy prubehu behu metody
+
+    Nejprve se zjisti, zdali pro matici Q je zajistena konvergence
+
+    Dale probiha vlastni beh programu, postupne iterovani a ziskavani novych
+    aproximaci reseni z pusodnich
+
+    Pokud se behem behu stane, ze spektralni prumer matice W (chyby) prekroci
+    hranici 1, pak se metoda ukonci neb chyba aproximaci nekonverguje k nule
+    a tedy reseni soustavy rovnic diverguje
+
+    Pokud se vycerpa maximalni pocet iteraci, tak je uzivatel informovat, ze metoda nejspise diverguje
+"""
 def jacobi_method(y, max_iter=10000):
     print("Spousteni Jacobiho metody se vstupnim parametrem {}".format(y))
     # Vytvoreni matice Q
@@ -228,7 +274,9 @@ def jacobi_method(y, max_iter=10000):
         if (is_criteria_satisfied(a_matrix, b_vector, x_cur)):
             print("Podminka aproximace splnena v {} iterace".format(i))
             return True
-        # Overeni konvergence aproximaci
+        
+        # Overeni konvergence aproximaci - chyba musi konvergovat k nule
+        # ek = Wk*e0
         if i != 0 and get_spectral_radius(wk_matrix) > 1:
             break
         if i != 0:
@@ -278,7 +326,8 @@ def sor_method(y, max_iter=10000):
             print("Podminka aproximace splnena v {} iterace".format(i))
             return True
         
-        # Overeni konvergence aproximaci
+        # Overeni konvergence aproximaci - chyba musi konvergovat k nule
+        # ek = Wk*e0
         if i != 0 and get_spectral_radius(wk_matrix) >= 1:
             break
         if i != 0:
